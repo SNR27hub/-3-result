@@ -4,26 +4,141 @@
   <meta charset="UTF-8">
   <title>Developer SNR - Result Portal</title>
   <style>
-    body { font-family: Arial, sans-serif; text-align: center; background: #f4f4f9; }
-    header { background: #6200ea; color: white; padding: 15px; font-size: 22px; font-weight: bold; }
-    .container { margin-top: 30px; }
-    input { padding: 10px; width: 260px; border-radius: 5px; border: 1px solid #ccc; }
-    button { padding: 10px 15px; margin-left: 10px; border: none; border-radius: 5px; background: #6200ea; color: white; cursor: pointer; }
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      text-align: center;
+      background: linear-gradient(135deg, #74ebd5, #acb6e5);
+      margin: 0;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+    header {
+      background: #4a00e0;
+      color: white;
+      padding: 20px;
+      font-size: 28px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+    header:hover {
+      background: #8e2de2;
+    }
+    .container {
+      margin: 30px auto;
+      max-width: 600px;
+      padding: 0 20px;
+    }
+    input {
+      padding: 12px;
+      width: 300px;
+      border-radius: 25px;
+      border: none;
+      outline: none;
+      font-size: 16px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+      transition: transform 0.3s ease;
+    }
+    input:focus {
+      transform: scale(1.02);
+    }
+    button {
+      padding: 12px 20px;
+      margin-left: 10px;
+      border: none;
+      border-radius: 25px;
+      background: #ff6f61;
+      color: white;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background 0.3s ease, transform 0.3s ease;
+    }
+    button:hover {
+      background: #ff3d2e;
+      transform: translateY(-2px);
+    }
     .card {
-      margin: 20px auto; padding: 20px; width: 420px; 
-      background: white; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-      position: relative; text-align: left;
+      margin: 20px auto;
+      padding: 25px;
+      width: 90%;
+      max-width: 500px;
+      background: linear-gradient(135deg, #ffffff, #f0f4ff);
+      border-radius: 15px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+      position: relative;
+      text-align: left;
+      animation: slideIn 0.5s ease-out;
     }
-    .card h3 { margin: 5px 0; color: #333; }
+    .card h3 {
+      margin: 10px 0;
+      color: #2c3e50;
+      font-size: 24px;
+      display: flex;
+      align-items: center;
+    }
+    .verified {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      background: #00f;
+      color: white;
+      border-radius: 50%;
+      text-align: center;
+      line-height: 20px;
+      margin-left: 10px;
+      font-size: 12px;
+    }
+    .card p {
+      margin: 8px 0;
+      color: #34495e;
+      font-size: 16px;
+    }
+    .subject-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 10px;
+      margin-top: 15px;
+      padding: 10px;
+      background: rgba(0,0,0,0.05);
+      border-radius: 10px;
+    }
     .watermark {
-      position: absolute; bottom: 10px; right: 10px;
-      opacity: 0.2; font-size: 22px; font-weight: bold; color: #6200ea;
+      position: absolute;
+      bottom: 10px;
+      right: 10px;
+      opacity: 0.3;
+      font-size: 28px;
+      font-weight: bold;
+      color: #4a00e0;
+      transform: rotate(-15deg);
     }
-    .notfound { color: red; margin-top: 20px; }
+    .notfound {
+      color: #e74c3c;
+      font-size: 18px;
+      margin-top: 20px;
+      animation: shake 0.3s ease;
+    }
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-5px); }
+      75% { transform: translateX(5px); }
+    }
   </style>
 </head>
 <body>
-  <header>Developer SNR - Result Portal</header>
+  <header onclick="window.open('https://www.instagram.com/snr__27?igsh=MXI4YXd5NnIxMDAzcw==', '_blank')">
+    Developer SNR - Result Portal
+  </header>
 
   <div class="container">
     <input type="text" id="searchBox" placeholder="Enter Roll No. or Name">
@@ -34,12 +149,21 @@
   <script>
     let students = [];
 
+    // Sample subject-wise marks (assuming data.txt includes this)
+    const sampleSubjects = {
+      "Maths": "85",
+      "Physics": "78",
+      "Chemistry": "92",
+      "English": "88"
+    };
+
     // Data load karega
     fetch("data.txt")
       .then(res => res.text())
       .then(text => {
         students = parseData(text);
-      });
+      })
+      .catch(err => console.error("Error loading data:", err));
 
     // Raw text ko student objects me convert karega
     function parseData(raw) {
@@ -47,28 +171,17 @@
       let data = [];
 
       lines.forEach(line => {
-        // Split by tab ya multiple spaces
         let parts = line.split(/\s+/);
-
-        // Roll no. first hoga (agar N se start hai)
         let roll = parts[0].startsWith("N") ? parts[0] : "";
-
-        // Name ke liye index find karo
         let nameIndex = roll ? 2 : 0;
         let name = parts.slice(nameIndex, nameIndex + 3).join(" ");
-
-        // Result
         let result = line.includes("Pass") ? "Pass" : "Fail";
-
-        // Percentage
         let percentageMatch = line.match(/\d+\.\d+/);
         let percentage = percentageMatch ? percentageMatch[0] : "-";
-
-        // College name
         let college = "";
         let idx = line.indexOf("175 -");
         if (idx !== -1) {
-          college = line.substring(idx).trim();
+          college = line.substring(idx + 5).trim(); // Remove college ID
         }
 
         data.push({
@@ -77,6 +190,7 @@
           result,
           percentage,
           college,
+          subjects: sampleSubjects, // Sample subject data
           raw: line
         });
       });
@@ -95,13 +209,18 @@
       resultDiv.innerHTML = "";
 
       if (student) {
+        let subjectHTML = Object.entries(student.subjects)
+          .map(([subject, marks]) => `<div>${subject}</div><div>${marks}</div>`)
+          .join("");
+        
         resultDiv.innerHTML = `
           <div class="card">
-            <h3>${student.name}</h3>
+            <h3>${student.name} <span class="verified">✔</span></h3>
             <p><b>Roll No:</b> ${student.roll || "N/A"}</p>
             <p><b>College:</b> ${student.college}</p>
-            <p><b>Percentage:</b> ${student.percentage}</p>
+            <p><b>Percentage:</b> ${student.percentage}%</p>
             <p><b>Result:</b> ${student.result}</p>
+            <div class="subject-grid">${subjectHTML}</div>
             <div class="watermark">SNR</div>
           </div>
         `;
