@@ -7,16 +7,17 @@
     body { font-family: Arial, sans-serif; text-align: center; background: #f4f4f9; }
     header { background: #6200ea; color: white; padding: 15px; font-size: 22px; font-weight: bold; }
     .container { margin-top: 30px; }
-    input { padding: 10px; width: 250px; border-radius: 5px; border: 1px solid #ccc; }
+    input { padding: 10px; width: 260px; border-radius: 5px; border: 1px solid #ccc; }
     button { padding: 10px 15px; margin-left: 10px; border: none; border-radius: 5px; background: #6200ea; color: white; cursor: pointer; }
     .card {
-      margin: 20px auto; padding: 20px; width: 400px; 
+      margin: 20px auto; padding: 20px; width: 420px; 
       background: white; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-      position: relative;
+      position: relative; text-align: left;
     }
+    .card h3 { margin: 5px 0; color: #333; }
     .watermark {
       position: absolute; bottom: 10px; right: 10px;
-      opacity: 0.2; font-size: 18px; font-weight: bold; color: #6200ea;
+      opacity: 0.2; font-size: 22px; font-weight: bold; color: #6200ea;
     }
     .notfound { color: red; margin-top: 20px; }
   </style>
@@ -33,32 +34,57 @@
   <script>
     let students = [];
 
-    // Fetch and parse data.txt
+    // Data load karega
     fetch("data.txt")
       .then(res => res.text())
       .then(text => {
         students = parseData(text);
       });
 
+    // Raw text ko student objects me convert karega
     function parseData(raw) {
       const lines = raw.split("\n").map(l => l.trim()).filter(l => l.length > 0);
       let data = [];
 
       lines.forEach(line => {
-        let parts = line.split(/\s+/); // split by spaces/tabs
-        let roll = parts[0].match(/^N/) ? parts[0] : "";
-        let nameIndex = roll ? 2 : 0;
-        let name = parts[nameIndex] + " " + (parts[nameIndex+1] || "");
-        let college = line.substring(line.lastIndexOf("175")); // simple extract
-        let result = line.includes("Pass") ? "Pass" : "Fail";
-        let percentage = (line.match(/\d+\.\d+/) || [null])[0];
+        // Split by tab ya multiple spaces
+        let parts = line.split(/\s+/);
 
-        data.push({ roll, name: name.trim(), result, percentage, college, raw: line });
+        // Roll no. first hoga (agar N se start hai)
+        let roll = parts[0].startsWith("N") ? parts[0] : "";
+
+        // Name ke liye index find karo
+        let nameIndex = roll ? 2 : 0;
+        let name = parts.slice(nameIndex, nameIndex + 3).join(" ");
+
+        // Result
+        let result = line.includes("Pass") ? "Pass" : "Fail";
+
+        // Percentage
+        let percentageMatch = line.match(/\d+\.\d+/);
+        let percentage = percentageMatch ? percentageMatch[0] : "-";
+
+        // College name
+        let college = "";
+        let idx = line.indexOf("175 -");
+        if (idx !== -1) {
+          college = line.substring(idx).trim();
+        }
+
+        data.push({
+          roll,
+          name: name.trim(),
+          result,
+          percentage,
+          college,
+          raw: line
+        });
       });
 
       return data;
     }
 
+    // Search function
     function searchResult() {
       const query = document.getElementById("searchBox").value.toLowerCase();
       const student = students.find(s => 
@@ -74,7 +100,7 @@
             <h3>${student.name}</h3>
             <p><b>Roll No:</b> ${student.roll || "N/A"}</p>
             <p><b>College:</b> ${student.college}</p>
-            <p><b>Percentage:</b> ${student.percentage || "-"}</p>
+            <p><b>Percentage:</b> ${student.percentage}</p>
             <p><b>Result:</b> ${student.result}</p>
             <div class="watermark">SNR</div>
           </div>
