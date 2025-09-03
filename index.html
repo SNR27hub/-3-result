@@ -102,6 +102,13 @@
       background: rgba(0,0,0,0.05);
       border-radius: 10px;
     }
+    .subject-grid div {
+      font-size: 15px;
+      color: #34495e;
+    }
+    .subject-grid div:nth-child(odd) {
+      font-weight: bold;
+    }
     .watermark {
       position: absolute;
       bottom: 10px;
@@ -149,21 +156,16 @@
   <script>
     let students = [];
 
-    // Sample subject-wise marks (assuming data.txt includes this)
-    const sampleSubjects = {
-      "Maths": "85",
-      "Physics": "78",
-      "Chemistry": "92",
-      "English": "88"
-    };
-
     // Data load karega
     fetch("data.txt")
       .then(res => res.text())
       .then(text => {
         students = parseData(text);
       })
-      .catch(err => console.error("Error loading data:", err));
+      .catch(err => {
+        console.error("Error loading data:", err);
+        document.getElementById("result").innerHTML = `<div class="notfound">❌ Error loading data</div>`;
+      });
 
     // Raw text ko student objects me convert karega
     function parseData(raw) {
@@ -173,24 +175,57 @@
       lines.forEach(line => {
         let parts = line.split(/\s+/);
         let roll = parts[0].startsWith("N") ? parts[0] : "";
+        let year = parts[1]; // Year (e.g., 24)
         let nameIndex = roll ? 2 : 0;
-        let name = parts.slice(nameIndex, nameIndex + 3).join(" ");
-        let result = line.includes("Pass") ? "Pass" : "Fail";
+        
+        // Find where subjects start (look for first subject code like EDN, HIS, etc.)
+        let subjectStartIndex = parts.findIndex((p, i) => i >= nameIndex && /^[A-Z]{2,3}$/.test(p));
+        let name = parts.slice(nameIndex, subjectStartIndex).join(" ").trim();
+
+        // Extract subjects and grades
+        let subjects = {};
+        let i = subjectStartIndex;
+        while (i < parts.length && /^[A-Z]{2,3}$/.test(parts[i])) {
+          let subject = parts[i];
+          let grade = parts[i + 1];
+          if (!subjects[subject]) {
+            subjects[subject] = [];
+          }
+          subjects[subject].push(grade);
+          i += 2;
+        }
+
+        // Percentage (if present)
+        let percentage = "-";
         let percentageMatch = line.match(/\d+\.\d+/);
-        let percentage = percentageMatch ? percentageMatch[0] : "-";
+        if (percentageMatch) {
+          percentage = percentageMatch[0];
+        }
+
+        // Result
+        let result = line.includes("Pass") ? "Pass" : "Fail";
+
+        // Date (if present)
+        let date = "";
+        if (line.includes("December, 2024")) {
+          date = "December, 2024";
+        }
+
+        // College name (remove ID)
         let college = "";
         let idx = line.indexOf("175 -");
         if (idx !== -1) {
-          college = line.substring(idx + 5).trim(); // Remove college ID
+          college = line.substring(idx + 5).trim().replace(/Pass|Fail|December, 2024|\d+\.\d+/, "").trim();
         }
 
         data.push({
           roll,
-          name: name.trim(),
+          name,
           result,
           percentage,
+          date,
           college,
-          subjects: sampleSubjects, // Sample subject data
+          subjects,
           raw: line
         });
       });
@@ -209,9 +244,13 @@
       resultDiv.innerHTML = "";
 
       if (student) {
-        let subjectHTML = Object.entries(student.subjects)
-          .map(([subject, marks]) => `<div>${subject}</div><div>${marks}</div>`)
-          .join("");
+        // Prepare subject HTML (handle multiple grades for same subject)
+        let subjectHTML = "";
+        for (let [subject, grades] of Object.entries(student.subjects)) {
+          grades.forEach((grade, index) => {
+            subjectHTML += `<div>${subject}${grades.length > 1 ? ` (${index + 1})` : ""}</div><div>${grade}</div>`;
+          });
+        }
         
         resultDiv.innerHTML = `
           <div class="card">
@@ -220,7 +259,11 @@
             <p><b>College:</b> ${student.college}</p>
             <p><b>Percentage:</b> ${student.percentage}%</p>
             <p><b>Result:</b> ${student.result}</p>
-            <div class="subject-grid">${subjectHTML}</div>
+            ${student.date ? `<p><b>Exam Date:</b> ${student.date}</p>` : ""}
+            <div class="subject-grid">
+              <div><b>Subject</b></div><div><b>Grade</b></div>
+              ${subjectHTML}
+            </div>
             <div class="watermark">SNR</div>
           </div>
         `;
