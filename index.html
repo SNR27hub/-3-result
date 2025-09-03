@@ -1,0 +1,211 @@
+<meta name='viewport' content='width=device-width, initial-scale=1'/><!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Developer SNR - Student Result</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, #89f7fe, #66a6ff);
+      margin: 0;
+      padding: 0;
+      text-align: center;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #004aad;
+      color: white;
+      padding: 15px;
+      font-size: 22px;
+      font-weight: bold;
+    }
+
+    header img {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      margin-right: 10px;
+    }
+
+    .search-box {
+      margin: 20px;
+    }
+
+    .search-box input {
+      padding: 10px;
+      width: 70%;
+      border-radius: 10px;
+      border: 1px solid #ccc;
+      font-size: 16px;
+    }
+
+    .search-box button {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 10px;
+      background: #ff6600;
+      color: white;
+      font-size: 16px;
+      cursor: pointer;
+      margin-left: 10px;
+    }
+
+    .card {
+      position: relative;
+      background: white;
+      width: 90%;
+      max-width: 500px;
+      margin: 20px auto;
+      padding: 20px;
+      border-radius: 20px;
+      box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+      overflow: hidden;
+    }
+
+    .watermark {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) rotate(-30deg);
+      font-size: 40px;
+      color: rgba(0,0,0,0.1);
+      pointer-events: none;
+      white-space: nowrap;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
+    }
+
+    table, th, td {
+      border: 1px solid #ddd;
+    }
+
+    th, td {
+      padding: 8px;
+      text-align: center;
+    }
+
+    th {
+      background: #004aad;
+      color: white;
+    }
+
+    .result-pass {
+      color: green;
+      font-weight: bold;
+    }
+
+    .result-fail {
+      color: red;
+      font-weight: bold;
+    }
+
+    .download-btn {
+      margin-top: 15px;
+      background: #28a745;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 10px;
+      border: none;
+      cursor: pointer;
+      font-size: 16px;
+    }
+
+    .no-record {
+      font-size: 18px;
+      color: red;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <img src="https://via.placeholder.com/40" alt="Logo">
+    Developer SNR
+  </header>
+
+  <div class="search-box">
+    <input type="text" id="searchInput" placeholder="Enter Roll Number or Name">
+    <button onclick="searchStudent()">Search</button>
+  </div>
+
+  <div id="resultArea"></div>
+
+  <!-- html2canvas for image download -->
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+  <script>
+    let students = [];
+
+    // Load CSV file
+    fetch("EGTR_+3_NAME_NEP_DEC_2024.csv")
+      .then(res => res.text())
+      .then(csv => {
+        let rows = csv.trim().split("\n");
+        let headers = rows[0].split(",");
+        students = rows.slice(1).map(row => {
+          let values = row.split(",");
+          let obj = {};
+          headers.forEach((h, i) => obj[h.trim()] = values[i].trim());
+          return obj;
+        });
+      });
+
+    function searchStudent() {
+      let input = document.getElementById("searchInput").value.toLowerCase();
+      let student = students.find(s => 
+        s["Roll Number"].toLowerCase() === input || 
+        s["Name"].toLowerCase() === input
+      );
+
+      let resultArea = document.getElementById("resultArea");
+      resultArea.innerHTML = "";
+
+      if (!student) {
+        resultArea.innerHTML = `<div class="no-record">No record found.</div>`;
+        return;
+      }
+
+      // Create result card
+      let card = document.createElement("div");
+      card.className = "card";
+      card.innerHTML = `
+        <div class="watermark">Developer SNR</div>
+        <h2>${student["Name"]}</h2>
+        <p><b>Roll Number:</b> ${student["Roll Number"]}</p>
+        <p><b>College:</b> ${student["College"]}</p>
+        <table>
+          <tr>
+            <th>Subject</th>
+            <th>Marks</th>
+          </tr>
+          ${Object.keys(student).filter(k => !["Roll Number","Name","College","Percentage","Result"].includes(k))
+            .map(sub => `<tr><td>${sub}</td><td>${student[sub]}</td></tr>`).join("")}
+        </table>
+        <p><b>Percentage:</b> ${student["Percentage"]}%</p>
+        <p class="${student["Result"].toLowerCase()==="pass" ? "result-pass" : "result-fail"}">
+          Result: ${student["Result"]}
+        </p>
+        <button class="download-btn" onclick="downloadResult(this)">Download Result</button>
+      `;
+      resultArea.appendChild(card);
+    }
+
+    function downloadResult(btn) {
+      let card = btn.parentElement;
+      html2canvas(card).then(canvas => {
+        let link = document.createElement("a");
+        link.download = "result.png";
+        link.href = canvas.toDataURL("image/png");
+        link.click();
+      });
+    }
+  </script>
+</body>
+</html>
