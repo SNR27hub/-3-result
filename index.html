@@ -73,6 +73,23 @@
       transform: scale(1.05);
       animation: pulse 0.5s infinite alternate;
     }
+    .whatsapp-button {
+      background: #25D366;
+      margin-top: 15px;
+      padding: 12px 20px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .whatsapp-button:hover {
+      background: #20b358;
+      transform: scale(1.05);
+      animation: pulse 0.5s infinite alternate;
+    }
+    .whatsapp-button img {
+      width: 24px;
+      height: 24px;
+    }
     .card {
       margin: 30px auto;
       padding: 30px;
@@ -141,6 +158,22 @@
       font-size: 20px;
       margin-top: 20px;
       animation: shake 0.3s ease;
+      text-align: center;
+    }
+    .notice {
+      margin-top: 20px;
+      padding: 15px;
+      background: rgba(255, 255, 255, 0.9);
+      border-radius: 10px;
+      box-shadow: 0 3px 6px rgba(0,0,0,0.2);
+      font-size: 16px;
+      color: #34495e;
+      text-align: center;
+      max-width: 800px;
+      width: 90%;
+    }
+    .notice p {
+      margin: 5px 0;
     }
     @keyframes fadeIn {
       from {
@@ -184,6 +217,10 @@
     <input type="text" id="searchBox" placeholder="Enter Roll No. or Name">
     <button onclick="searchResult()">Search</button>
     <div id="result"></div>
+    <div class="notice">
+      <p>This website is developed by a student of Jamala Degree College. Developed by SNR.</p>
+      <p>ଏହି ୱେବସାଇଟ ଜମଲା ଡିଗ୍ରୀ କଲେଜ ର ଜଣେ ଛାତ୍ର ଦ୍ୱାରା ବିକଶିତ। SNR ଦ୍ୱାରା ବିକଶିତ।</p>
+    </div>
   </div>
 
   <script>
@@ -196,7 +233,7 @@
         students = parseData(text);
       })
       .catch(err => {
-        console.error("Error loading data:", err);
+        console.error("Error ranging data:", err);
         document.getElementById("result").innerHTML = `<div class="notfound">❌ Error loading data</div>`;
       });
 
@@ -244,7 +281,7 @@
           date = "December, 2024";
         }
 
-        // College name (remove ID)
+        // College adı (remove ID)
         let college = "";
         let idx = line.indexOf("175 -");
         if (idx !== -1) {
@@ -279,15 +316,22 @@
       if (student) {
         // Prepare subject HTML (handle multiple grades for same subject)
         let subjectHTML = "";
+        let subjectText = "";
         for (let [subject, grades] of Object.entries(student.subjects)) {
           grades.forEach((grade, index) => {
-            subjectHTML += `<div>${subject}${grades.length > 1 ? ` (${index + 1})` : ""}</div><div>${grade}</div>`;
+            const subjectLabel = `${subject}${grades.length > 1 ? ` (${index + 1})` : ""}`;
+            subjectHTML += `<div>${subjectLabel}</div><div>${grade}</div>`;
+            subjectText += `${subjectLabel}:${grade}\n`;
           });
         }
         
         // Apply color class based on result
         let resultClass = student.result === "Pass" ? "result-pass" : "result-fail";
-        
+
+        // Prepare WhatsApp share text
+        let shareText = `Result for ${student.name}\nRoll No: ${student.roll || "N/A"}\nCollege: ${student.college}\nPercentage: ${student.percentage}%\nResult: ${student.result}\n${student.date ? `Date: ${student.date}\n` : ""}Subjects:\n${subjectText}`;
+        let whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(shareText)}`;
+
         resultDiv.innerHTML = `
           <div class="card">
             <h3>${student.name} <a href="https://postimages.org/" target="_blank" class="verified"><img src="https://i.postimg.cc/1zk15P0B/badge-18371637-1.png" border="0" alt="badge-18371637-1"/></a></h3>
@@ -300,11 +344,21 @@
               <div><b>Subject</b></div><div><b>Grade</b></div>
               ${subjectHTML}
             </div>
+            <a href="${whatsappUrl}" target="_blank" class="whatsapp-button">
+              <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="WhatsApp">
+              Share on WhatsApp
+            </a>
             <div class="watermark">SNR</div>
           </div>
         `;
       } else {
-        resultDiv.innerHTML = `<div class="notfound">❌ Result not found</div>`;
+        resultDiv.innerHTML = `
+          <div class="notfound">
+            ❌ Result not found<br>
+            If your college name or result is not showing, please wait until 15 September. Results will be updated after the developer's +3 exams.<br>
+            ଯଦି ଆପଣଙ୍କ କଲେଜର ନାମ କିମ୍ବା ଫଳାଫଳ ଦେଖାଯାଉନାହିଁ, ଦୟାକରି ୧୫ ସେପ୍ଟେମ୍ବର ପର୍ଯ୍ୟନ୍ତ ଅପେକ୍ଷା କରନ୍ତୁ। ଡେଭେଲପରଙ୍କ +୩ ପରୀକ୍ଷା ପରେ ଫଳାଫଳ ଅପଡେଟ ହେବ।
+          </div>
+        `;
       }
     }
   </script>
