@@ -253,13 +253,31 @@
     <div class="notice">
       <p class="snr-text">This website is developed by a student. Developed by SNR <a href="https://postimages.org/" target="_blank"><img src="https://i.postimg.cc/1zk15P0B/badge-18371637-1.png" border="0" alt="badge-18371637-1"/></a></p>
       <p>The results displayed are for +3 1st Semester under colleges affiliated with Sambalpur University. +3 2nd Semester results are coming soon.</p>
-      <p class="snr-text">ଏହି ୱେବସାଇଟ ଜଣେ ଛାତ୍ରଙ୍କ ଦ୍ୱାରା ବିକଶିତ। SNR ଦ୍ୱାରା ବିକଶିତ। <a href="https://postimages.org/" target="_blank"><img src="https://i.postimg.cc/1zk15P0B/badge-18371637-1.png" border="0" alt="badge-18371637-1"/></a></p>
-      <p>ପ୍ରଦର୍ଶିତ ଫଳାଫଳ ସମ୍ବଲପୁର ବିଶ୍ୱବିଦ୍ୟାଳୟ ଅଧୀନସ୍ଥ କଲେଜଗୁଡ଼ିକ ପାଇଁ +୩ ପ୍ରଥମ ସେମିଷ୍ଟରର। +୩ ଦ୍ୱିତୀୟ ସେମିଷ୍ଟର ଫଳାଫଳ ଶୀଘ୍ର ଆସୁଛି।</p>
+      <p class="snr-text">ଏହି ୱେବସାଇଟ ଜଣେ ଛାତ୍ରଙ୍କ ଦ୍ୱାରା ବିକଶିତ। SNR ଦ୍ଢ଼ାରା ବିକଶିତ। <a href="https://postimages.org/" target="_blank"><img src="https://i.postimg.cc/1zk15P0B/badge-18371637-1.png" border="0" alt="badge-18371637-1"/></a></p>
+      <p>ପ୍ରଦର୍ଶିତ ଫଳାଫଳ ସମ୍ବଲପୁର ବିଶ୍ୱବିଦ୍ୟାଳୟ ଅଧୀନସ୍ଥ କଲେଜଗୁଡ଼ିକ ପାଇଁ +୩ ପ୍ରଥମ ସେମିଷ୍ଟରର। +୩ ଦ୍ଢ଼ିତୀୟ ସେମିଷ୍ଟର ଫଳାଫଳ ଶୀଘ୍ର ଆସୁଛି।</p>
     </div>
   </div>
 
   <script>
     let students = [];
+
+    // Demo student for SNR
+    const demoStudent = {
+      roll: "Demo-SNR",
+      name: "SNR",
+      result: "Pass",
+      percentage: "10",
+      date: "December, 2024",
+      college: "SNR College",
+      subjects: {
+        "EDN": ["A+"],
+        "HIS": ["A+"],
+        "PSC": ["A+"],
+        "ODI": ["A+"],
+        "ES": ["A+"],
+        "GEN": ["A+"]
+      }
+    };
 
     // Data load karega
     fetch("data.txt")
@@ -341,9 +359,16 @@
     // Search function
     function searchResult() {
       const query = document.getElementById("searchBox").value.toLowerCase();
-      const student = students.find(s => 
-        s.roll.toLowerCase() === query || s.name.toLowerCase().includes(query)
-      );
+      let student;
+
+      // Check for demo student
+      if (query === "snr") {
+        student = demoStudent;
+      } else {
+        student = students.find(s => 
+          s.roll.toLowerCase() === query || s.name.toLowerCase().includes(query)
+        );
+      }
 
       let resultDiv = document.getElementById("result");
       resultDiv.innerHTML = "";
