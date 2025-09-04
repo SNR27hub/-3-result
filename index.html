@@ -345,7 +345,7 @@
         let resultClass = student.result === "Pass" ? "result-pass" : "result-fail";
 
         // WhatsApp share website link
-        let shareText = `Check your results at Developer SNR Result Portal: ${window.location.href}\nDeveloped by a student of Jamala Degree College.`;
+        let shareText = `Check your results at Developer SNR Result Portal: ${window.location.href}\nDeveloped by a student SNR.`;
         let whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(shareText)}`;
 
         resultDiv.innerHTML = `
