@@ -14,7 +14,6 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: center;
       overflow-x: hidden;
     }
     header {
@@ -32,6 +31,9 @@
       align-items: center;
       gap: 10px;
       animation: fadeInScale 1s ease-out;
+      position: fixed;
+      top: 0;
+      z-index: 1000;
     }
     header:hover {
       background: #8e2de2;
@@ -41,14 +43,13 @@
       height: 24px;
     }
     .container {
-      margin: 20px auto;
+      margin: 100px auto 20px auto;
       width: 90%;
       max-width: 1000px;
-      min-height: calc(100vh - 80px);
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: center;
+      justify-content: flex-start;
       animation: fadeIn 1.2s ease-out;
     }
     input {
@@ -103,12 +104,13 @@
       padding: 30px;
       width: 90%;
       max-width: 800px;
-      background: linear-gradient(135deg, #ffffff, #f0f4ff);
-      border-radius: 15px;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+      background: linear-gradient(135deg, #ffffff, #e6e6fa);
+      border-radius: 20px;
+      box-shadow: 0 15px 30px rgba(0,0,0,0.3), inset 0 0 10px rgba(255,255,255,0.5);
       position: relative;
       text-align: left;
       animation: slideIn 0.7s ease-out;
+      border: 2px solid #ffd700;
     }
     .card h3 {
       margin: 10px 0;
@@ -128,11 +130,11 @@
       font-size: 18px;
     }
     .result-pass {
-      color: #2ecc71; /* Green for Pass */
+      color: #2ecc71;
       font-weight: bold;
     }
     .result-fail {
-      color: #e74c3c; /* Red for Fail */
+      color: #e74c3c;
       font-weight: bold;
     }
     .subject-grid {
@@ -179,9 +181,21 @@
       text-align: center;
       max-width: 800px;
       width: 90%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
     }
     .notice p {
       margin: 5px 0;
+    }
+    .notice .snr-text {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .notice .snr-text img {
+      width: 20px;
+      height: 20px;
     }
     @keyframes fadeIn {
       from {
@@ -237,8 +251,10 @@
     <button onclick="searchResult()">Search</button>
     <div id="result"></div>
     <div class="notice">
-      <p>This website is developed by a student. Developed by SNR.</p>
-      <p>ଏହି ୱେବସାଇଟ  ଜଣେ ଛାତ୍ର ଦ୍ୱାରା ବିକଶିତ। SNR ଦ୍ୱାରା ବିକଶିତ।</p>
+      <p class="snr-text">This website is developed by a student. Developed by SNR <a href="https://postimages.org/" target="_blank"><img src="https://i.postimg.cc/1zk15P0B/badge-18371637-1.png" border="0" alt="badge-18371637-1"/></a></p>
+      <p>The results displayed are for +3 1st Semester under colleges affiliated with Sambalpur University. +3 2nd Semester results are coming soon.</p>
+      <p class="snr-text">ଏହି ୱେବସାଇଟ ଜଣେ ଛାତ୍ରଙ୍କ ଦ୍ୱାରା ବିକଶିତ। SNR ଦ୍ୱାରା ବିକଶିତ। <a href="https://postimages.org/" target="_blank"><img src="https://i.postimg.cc/1zk15P0B/badge-18371637-1.png" border="0" alt="badge-18371637-1"/></a></p>
+      <p>ପ୍ରଦର୍ଶିତ ଫଳାଫଳ ସମ୍ବଲପୁର ବିଶ୍ୱବିଦ୍ୟାଳୟ ଅଧୀନସ୍ଥ କଲେଜଗୁଡ଼ିକ ପାଇଁ +୩ ପ୍ରଥମ ସେମିଷ୍ଟରର। +୩ ଦ୍ୱିତୀୟ ସେମିଷ୍ଟର ଫଳାଫଳ ଶୀଘ୍ର ଆସୁଛି।</p>
     </div>
   </div>
 
@@ -264,10 +280,10 @@
       lines.forEach(line => {
         let parts = line.split(/\s+/);
         let roll = parts[0].startsWith("N") ? parts[0] : "";
-        let year = parts[1]; // Year (e.g., 24)
+        let year = parts[1];
         let nameIndex = roll ? 2 : 0;
         
-        // Find where subjects start (look for first subject code like EDN, HIS, etc.)
+        // Find where subjects start
         let subjectStartIndex = parts.findIndex((p, i) => i >= nameIndex && /^[A-Z]{2,3}$/.test(p));
         let name = parts.slice(nameIndex, subjectStartIndex).join(" ").trim();
 
@@ -284,7 +300,7 @@
           i += 2;
         }
 
-        // Percentage (if present)
+        // Percentage
         let percentage = "-";
         let percentageMatch = line.match(/\d+\.\d+/);
         if (percentageMatch) {
@@ -294,13 +310,13 @@
         // Result
         let result = line.includes("Pass") ? "Pass" : "Fail";
 
-        // Date (if present)
+        // Date
         let date = "";
         if (line.includes("December, 2024")) {
           date = "December, 2024";
         }
 
-        // College name (remove ID)
+        // College name
         let college = "";
         let idx = line.indexOf("175 -");
         if (idx !== -1) {
@@ -345,7 +361,7 @@
         let resultClass = student.result === "Pass" ? "result-pass" : "result-fail";
 
         // WhatsApp share website link
-        let shareText = `Check your results at Developer SNR Result Portal: ${window.location.href}\nDeveloped by a student SNR.`;
+        let shareText = `Check your +3 1st Semester results at Developer SNR Result Portal: ${window.location.href}\nDeveloped by a student.`;
         let whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(shareText)}`;
 
         resultDiv.innerHTML = `
@@ -372,7 +388,7 @@
           <div class="notfound">
             ❌ Result not found<br>
             If your college name or result is not showing, please wait until 15 September. Results will be updated after the developer's +3 exams.<br>
-            ଯଦି ଆପଣଙ୍କ କଲେଜର ନାମ କିମ୍ବା ଫଳାଫଳ ଦେଖାଯାଉନାହିଁ, ଦୟାକରି ୧୫ ସେପ୍ଟେମ୍ବର ପର୍ଯ୍ୟନ୍ତ ଅପେକ୍ଷା କରନ୍ତୁ। ଡେଭେଲପରଙ୍କ +୩ ପରୀକ୍ଷା ପରେ ଫଳାଫଳ ଅପଡେଟ ହେବ।
+            ଯଦି ଆପଣଙ୍କ କଲେଜର ନାମ କିମ୍ବା ଫଳାଫଳ ଦେଖାଯାଉନାହିଁ, ଦୟାକରି ୧୫ ସେପ୍ଟେମ୍ବର ପର୍ଯ୍ୟନ୍ତ ଅପେକ୍ଷା କରନ୍ତୁ। ଡେଭେଲପରଙ୍କର +୩ ପରୀକ୍ଷା ପରେ ଫଳାଫଳ ଅପଡେଟ ହେବ।
           </div>
         `;
       }
