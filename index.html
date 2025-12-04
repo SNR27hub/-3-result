@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta name="google-site-verification" content="BoXN-_xrR1h6w0XDyEKKTVQTRIRWDhRCx9jMS2QUaYA" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Developer SNR - Result Portal</title>
+  <!-- Excel Library -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <style>
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      text-align: center;
+      background: #e0eafc; /* Clean background */
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      overflow-x: hidden;
+    }
+    header {
+      background: #1a237e; /* Royal Blue */
+      color: white;
+      padding: 20px;
+      font-size: 28px;
+      font-weight: bold;
+      width: 100%;
+      text-align: center;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+      position: fixed;
+      top: 0;
+      z-index: 1000;
+    }
+    header img {
+      width: 24px;
+      height: 24px;
+    }
+    .container {
+      margin: 100px auto 20px auto;
+      width: 95%;
+      max-width: 900px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    
+    /* Tabs Design */
+    .tabs {
+      display: flex;
+      gap: 15px;
+      margin-bottom: 20px;
+      background: white;
+      padding: 8px;
+      border-radius: 50px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    .tab-btn {
+      padding: 10px 25px;
+      border: none;
+      border-radius: 40px;
+      background: transparent;
+      color: #555;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+    .tab-btn.active {
+      background: #1a237e;
+      color: white;
+      box-shadow: 0 4px 12px rgba(26, 35, 126, 0.3);
+    }
+    
+    .search-area {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+    input {
+      padding: 12px 20px;
+      width: 300px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      font-size: 16px;
+      outline: none;
+    }
+    button.search-btn {
+      padding: 12px 30px;
+      border: none;
+      border-radius: 8px;
+      background: #ff6f00; /* Dark Orange */
+      color: white;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+    button.search-btn:hover {
+      background: #e65100;
+    }
+
+    /* ---- PREMIUM CERTIFICATE CARD DESIGN ---- */
+    .card {
+      position: relative;
+      background: #fff;
+      width: 100%;
+      max-width: 850px;
+      padding: 40px;
+      box-sizing: border-box;
+      margin: 20px auto;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+      border: 10px solid #fff; /* White gap */
+      outline: 5px solid #1a237e; /* Outer Blue Border */
+      overflow: hidden;
+      text-align: left;
+    }
+    
+    /* Inner Gold Border for Premium Look */
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 10px; left: 10px; right: 10px; bottom: 10px;
+      border: 2px solid #ffd700; /* Gold */
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    /* ---- FIXED WATERMARK (CRISP & VISIBLE) ---- */
+    .watermark {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) rotate(-30deg);
+      font-size: 150px;
+      font-family: 'Impact', sans-serif;
+      font-weight: 900;
+      color: rgba(0, 0, 0, 0.06); /* Very Light Black - Crisp, not blurry */
+      white-space: nowrap;
+      pointer-events: none;
+      z-index: 0;
+      user-select: none;
+      text-transform: uppercase;
+      letter-spacing: 10px;
+    }
+
+    /* Card Content Layers */
+    .card-header, .card-body, .card-footer {
+      position: relative;
+      z-index: 2;
+    }
+
+    /* Header Section (Name & Info) */
+    .card-header {
+      text-align: center;
+      border-bottom: 2px solid #eee;
+      padding-bottom: 20px;
+      margin-bottom: 20px;
+    }
+    
+    .student-name-box {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .student-name {
+      font-size: 32px;
+      color: #1a237e;
+      font-weight: 800;
+      text-transform: uppercase;
+      margin: 0;
+      font-family: 'Times New Roman', serif; /* Official Look */
+    }
+
+    .verify-badge {
+      width: 28px;
+      height: 28px;
+    }
+
+    /* Developer Title (Niche) */
+    .dev-title {
+      font-size: 14px;
+      color: #ff6f00;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-top: 5px;
+      border: 1px solid #ff6f00;
+      display: inline-block;
+      padding: 2px 10px;
+      border-radius: 4px;
+    }
+
+    /* Student Info Grid */
+    .info-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+      margin-bottom: 20px;
+      background: #f8f9fa;
+      padding: 15px;
+      border-radius: 8px;
+      border: 1px solid #e0e0e0;
+    }
+    .info-item {
+      font-size: 16px;
+      color: #333;
+    }
+    .info-item strong {
+      color: #1a237e;
+      display: block;
+      font-size: 14px;
+      text-transform: uppercase;
+      opacity: 0.8;
+    }
+
+    /* Subject Table Look */
+    .subject-grid {
+      display: grid;
+      grid-template-columns: 3fr 1fr;
+      border: 1px solid #ccc;
+    }
+    .subject-row {
+      display: contents;
+    }
+    .subject-cell {
+      padding: 10px 15px;
+      border-bottom: 1px solid #eee;
+      font-size: 16px;
+    }
+    .subject-header {
+      background: #1a237e;
+      color: white;
+      font-weight: bold;
+      text-transform: uppercase;
+    }
+    .grade-cell {
+      text-align: center;
+      font-weight: bold;
+      border-left: 1px solid #eee;
+    }
+
+    /* Result Status */
+    .result-status {
+      text-align: center;
+      font-size: 20px;
+      margin-top: 20px;
+      padding: 10px;
+      background: #eee;
+      border-radius: 5px;
+    }
+    .pass { color: #2e7d32; font-weight: bold; }
+    .fail { color: #c62828; font-weight: bold; }
+
+    /* WhatsApp Button */
+    .whatsapp-button {
+      display: block;
+      width: fit-content;
+      margin: 20px auto 0;
+      background: #25D366;
+      color: white;
+      text-decoration: none;
+      padding: 10px 20px;
+      border-radius: 50px;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+    }
+    .whatsapp-button:hover { background: #1ebc57; }
+
+    .notfound {
+      color: #d32f2f;
+      background: #ffcdd2;
+      padding: 20px;
+      border-radius: 8px;
+      border: 1px solid #e57373;
+    }
+    
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+  </style>
+</head>
+<body>
+  <header onclick="window.open('https://www.instagram.com/snr__27?igsh=MXI4YXd5NnIxMDAzcw==', '_blank')">
+    Developer SNR - Portal
+    <a href="https://postimages.org/" target="_blank"><img src="https://i.postimg.cc/1zk15P0B/badge-18371637-1.png" border="0" alt="badge-18371637-1"/></a>
+  </header>
+
+  <div class="container">
+    
+    <div class="tabs">
+      <button class="tab-btn active" id="btn1" onclick="switchSemester(1)">1st Semester</button>
+      <button class="tab-btn" id="btn2" onclick="switchSemester(2)">2nd Semester</button>
+    </div>
+
+    <h2 id="semTitle" style="color: #1a237e; margin-top:0;">Check Result</h2>
+
+    <div class="search-area">
+      <input type="text" id="searchBox" placeholder="Enter Roll No. or Name">
+      <button class="search-btn" onclick="searchResult()">View Result</button>
+    </div>
+    
+    <div id="result"></div>
+    
+    <div style="margin-top: 30px; color: #666; font-size: 14px;">
+      <p>Results are for +3 1st & 2nd Semester (Sambalpur University)</p>
+      <p>Developed by <b>SNR</b></p>
+    </div>
+  </div>
+
+  <script>
+    let currentSemester = 1;
+    let studentsSem1 = [];
+    let studentsSem2 = [];
+
+    // --- DATA LOADING ---
+
+    // 1. Load 1st Sem Excel
+    fetch("EGTR_+3_1SEM_NEP_DEC_2024.xlsx")
+      .then(res => {
+        if (!res.ok) throw new Error("1st Sem Excel file not found");
+        return res.arrayBuffer();
+      })
+      .then(data => {
+        const workbook = XLSX.read(data, { type: 'array' });
+        const jsonData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
+        studentsSem1 = parseExcelData(jsonData, 1);
+      })
+      .catch(err => console.error("Error loading Sem 1:", err));
+
+    // 2. Load 2nd Sem Excel
+    fetch("EGTR_2ND_SEM_NEP.xlsx")
+      .then(res => {
+        if (!res.ok) throw new Error("2nd Sem Excel file not found");
+        return res.arrayBuffer();
+      })
+      .then(data => {
+        const workbook = XLSX.read(data, { type: 'array' });
+        const jsonData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
+        studentsSem2 = parseExcelData(jsonData, 2);
+      })
+      .catch(err => console.error("Error loading Sem 2:", err));
+
+    function parseExcelData(jsonData, sem) {
+      return jsonData.map(row => {
+        const getKey = (key) => Object.keys(row).find(k => k.toLowerCase().includes(key.toLowerCase()));
+        
+        let name = row[getKey('Name')] || "Unknown";
+        let roll = row[getKey('Roll')] || "N/A";
+        let college = row[getKey('College')] || "SNR College";
+        let result = row[getKey('Result')] || "-";
+        let sgpa = row[getKey('SGPA')] || row[getKey('Point')] || row[getKey('Percentage')] || "-";
+        
+        let subjects = {};
+        Object.keys(row).forEach(key => {
+            let lowerKey = key.toLowerCase();
+            if(!['name', 'roll', 'college', 'result', 'sgpa', 'point', 'serial', 'sl', 'percentage', 'cgpa'].some(x => lowerKey.includes(x))) {
+                subjects[key] = [row[key]];
+            }
+        });
+
+        return { roll: String(roll), name: String(name), result, percentage: sgpa, college, subjects, sem };
+      });
+    }
+
+    // --- LOGIC ---
+
+    function switchSemester(sem) {
+      currentSemester = sem;
+      document.getElementById("btn1").classList.toggle("active", sem === 1);
+      document.getElementById("btn2").classList.toggle("active", sem === 2);
+      document.getElementById("semTitle").innerText = `Search ${sem === 1 ? '1st' : '2nd'} Semester Result`;
+      document.getElementById("result").innerHTML = "";
+      document.getElementById("searchBox").value = "";
+    }
+
+    function searchResult() {
+      const query = document.getElementById("searchBox").value.trim().toLowerCase();
+      if (!query) return;
+
+      let resultDiv = document.getElementById("result");
+      resultDiv.innerHTML = "<p>Searching database...</p>";
+
+      let targetArray = currentSemester === 1 ? studentsSem1 : studentsSem2;
+      let student = targetArray.find(s => 
+        String(s.roll).toLowerCase() === query || String(s.name).toLowerCase().includes(query)
+      );
+      
+      // Developer Override
+      if (!student && (query === "snr" || query === "shankar meher")) {
+         student = {
+            roll: "DEV-SNR-01",
+            name: "Shankar Meher",
+            result: "Pass",
+            percentage: "10.00",
+            college: "SNR Institute of Technology",
+            subjects: { "WEB DEV": ["O"], "JAVA": ["O"], "AI": ["O"], "PYTHON": ["O"] },
+            sem: currentSemester
+         };
+      }
+
+      displayCard(student);
+    }
+
+    function displayCard(student) {
+      let resultDiv = document.getElementById("result");
+      resultDiv.innerHTML = "";
+
+      if (student) {
+        let resultClass = String(student.result).toLowerCase().includes("pass") ? "pass" : "fail";
+        let shareText = `Check your +3 Result: ${window.location.href}`;
+        let whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(shareText)}`;
+
+        // --- DEVELOPER DISPLAY LOGIC (UPDATED) ---
+        let finalName = student.name;
+        let devTagHTML = "";
+        
+        // Agar naam Shankar Meher hai
+        if (finalName.toLowerCase().includes("shankar meher")) {
+            // Name me SNR add nahi kiya (clean name), bas niche tag diya
+            devTagHTML = `<div class="dev-title">Lead Developer & Creator (SNR)</div>`;
+        }
+        // ------------------------------------------
+
+        // Subjects Generation
+        let subjectHTML = "";
+        for (let [subject, grades] of Object.entries(student.subjects)) {
+          if(grades[0] !== undefined) {
+             subjectHTML += `
+               <div class="subject-row">
+                 <div class="subject-cell">${subject}</div>
+                 <div class="subject-cell grade-cell">${grades.join(", ")}</div>
+               </div>`;
+          }
+        }
+
+        resultDiv.innerHTML = `
+          <div class="card" style="animation: fadeIn 0.8s ease;">
+            <!-- VISIBLE CLEAR WATERMARK -->
+            <div class="watermark">SNR</div>
+            
+            <div class="card-header">
+              <div class="student-name-box">
+                <h1 class="student-name">${finalName}</h1>
+                <a href="https://postimages.org/" target="_blank">
+                  <img src="https://i.postimg.cc/1zk15P0B/badge-18371637-1.png" class="verify-badge" border="0" alt="Verified"/>
+                </a>
+              </div>
+              <!-- Developer Tag Niche -->
+              ${devTagHTML}
+            </div>
+
+            <div class="card-body">
+              <div class="info-grid">
+                 <div class="info-item"><strong>Roll Number</strong>${student.roll}</div>
+                 <div class="info-item"><strong>College</strong>${student.college}</div>
+                 <div class="info-item"><strong>Exam</strong>+3 ${currentSemester === 1 ? '1st' : '2nd'} Semester</div>
+                 <div class="info-item"><strong>${currentSemester === 1 ? 'Percentage' : 'SGPA'}</strong>${student.percentage}</div>
+              </div>
+
+              <div class="subject-grid">
+                <div class="subject-row">
+                  <div class="subject-cell subject-header">Subject Code/Name</div>
+                  <div class="subject-cell subject-header grade-cell">Grade</div>
+                </div>
+                ${subjectHTML}
+              </div>
+
+              <div class="result-status">
+                Final Result: <span class="${resultClass}">${student.result}</span>
+              </div>
+            </div>
+
+            <div class="card-footer">
+               <a href="${whatsappUrl}" target="_blank" class="whatsapp-button">
+                 <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="WhatsApp"> Share Result
+               </a>
+            </div>
+          </div>
+        `;
+      } else {
+        resultDiv.innerHTML = `
+          <div class="notfound">
+            <h3>Result Not Found</h3>
+            <p>Please check the Roll Number or Name correctly.</p>
+            <p>Make sure you selected the correct Semester tab above.</p>
+          </div>
+        `;
+      }
+    }
+  </script>
+</body>
+</html>
