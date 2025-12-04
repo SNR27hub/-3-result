@@ -296,13 +296,22 @@
         fetch("EGTR_+3_1SEM_NEP_DEC_2024.xlsx").then(res => res.ok ? res.arrayBuffer() : Promise.reject("1st Sem Error")),
         fetch("EGTR_2ND_SEM_NEP.xlsx").then(res => res.ok ? res.arrayBuffer() : Promise.reject("2nd Sem Error"))
     ]).then(buffers => {
-        // Parse 1st Sem
-        const wb1 = XLSX.read(buffers[0], { type: 'array' });
-        studentsSem1 = parseExcelData(XLSX.utils.sheet_to_json(wb1.Sheets[wb1.SheetNames[0]]), 1);
         
-        // Parse 2nd Sem
+        // Parse 1st Sem - Loop through ALL sheets just in case
+        const wb1 = XLSX.read(buffers[0], { type: 'array' });
+        studentsSem1 = []; // Initialize empty array
+        wb1.SheetNames.forEach(sheetName => {
+            const rawData = XLSX.utils.sheet_to_json(wb1.Sheets[sheetName]);
+            studentsSem1 = studentsSem1.concat(parseExcelData(rawData, 1));
+        });
+        
+        // Parse 2nd Sem - Loop through ALL sheets (AH, SH, CH)
         const wb2 = XLSX.read(buffers[1], { type: 'array' });
-        studentsSem2 = parseExcelData(XLSX.utils.sheet_to_json(wb2.Sheets[wb2.SheetNames[0]]), 2);
+        studentsSem2 = []; // Initialize empty array
+        wb2.SheetNames.forEach(sheetName => {
+            const rawData = XLSX.utils.sheet_to_json(wb2.Sheets[sheetName]);
+            studentsSem2 = studentsSem2.concat(parseExcelData(rawData, 2));
+        });
         
         isDataLoaded = true;
         checkAndHideLoader(); // Check if we can hide screen
