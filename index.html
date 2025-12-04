@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta name="google-site-verification" content="BoXN-_xrR1h6w0XDyEKKTVQTRIRWDhRCx9jMS2QUaYA" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Developer SNR - Result Portal</title>
+  
+  <!-- Excel Library -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <!-- Download Library -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+  <style>
+    /* ---- LOADING SCREEN STYLES ---- */
+    #loadingScreen {
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(255, 255, 255, 0.65); /* Semi-transparent */
+      backdrop-filter: blur(8px); /* Blur effect like premium apps */
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      transition: opacity 0.5s ease;
+    }
+    
+    .spinner {
+      width: 60px;
+      height: 60px;
+      border: 6px solid #e0e0e0;
+      border-top: 6px solid #1a237e; /* Royal Blue */
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-bottom: 20px;
+    }
+
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+    .loading-text {
+      color: #1a237e;
+      font-size: 18px;
+      font-weight: bold;
+      margin: 5px 0;
+    }
+    
+    .sambalpuri-text {
+      color: #ff6f00;
+      font-size: 16px;
+      font-weight: bold;
+      margin-bottom: 15px;
+    }
+
+    .countdown {
+      font-size: 30px;
+      font-weight: 900;
+      color: #333;
+      margin-bottom: 20px;
+    }
+
+    .follow-btn {
+      background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%); 
+      color: white;
+      border: none;
+      padding: 10px 25px;
+      border-radius: 30px;
+      font-weight: bold;
+      font-size: 14px;
+      cursor: pointer;
+      text-decoration: none;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+      animation: pulseBtn 2s infinite;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    @keyframes pulseBtn { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+
+    /* ---- MAIN SITE STYLES ---- */
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      text-align: center;
+      background: #e0eafc;
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      overflow-x: hidden;
+    }
+    header {
+      background: #1a237e;
+      color: white;
+      padding: 15px;
+      font-size: 24px;
+      font-weight: bold;
+      width: 100%;
+      text-align: center;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+      position: fixed;
+      top: 0;
+      z-index: 1000;
+    }
+    header img { width: 20px; height: 20px; }
+    
+    .container {
+      margin: 90px auto 20px auto;
+      width: 95%;
+      max-width: 800px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    
+    .tabs {
+      display: flex; gap: 10px; margin-bottom: 20px;
+      background: white; padding: 5px; border-radius: 50px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    .tab-btn {
+      padding: 8px 20px; border: none; border-radius: 40px;
+      background: transparent; color: #555; font-size: 14px;
+      font-weight: 600; cursor: pointer; transition: 0.3s;
+    }
+    .tab-btn.active { background: #1a237e; color: white; box-shadow: 0 4px 12px rgba(26, 35, 126, 0.3); }
+    
+    .search-area {
+      display: flex; gap: 10px; flex-wrap: wrap; justify-content: center;
+      margin-bottom: 20px; width: 100%;
+    }
+    input {
+      padding: 12px; width: 60%; border-radius: 8px;
+      border: 1px solid #ccc; font-size: 16px; outline: none;
+    }
+    button.search-btn {
+      padding: 12px 20px; border: none; border-radius: 8px;
+      background: #ff6f00; color: white; font-size: 16px; font-weight: bold; cursor: pointer;
+    }
+
+    /* Card & Elements */
+    .card {
+      position: relative; background: #fff; width: 100%; box-sizing: border-box;
+      padding: 20px; margin: 10px auto; box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+      border: 5px solid #fff; outline: 3px solid #1a237e; overflow: hidden; text-align: left;
+    }
+    .card::before {
+      content: ''; position: absolute; top: 5px; left: 5px; right: 5px; bottom: 5px;
+      border: 2px solid #ffd700; pointer-events: none; z-index: 1;
+    }
+
+    .watermark {
+      position: absolute; top: 50%; left: 50%;
+      transform: translate(-50%, -50%) rotate(-30deg);
+      font-size: 80px; font-family: 'Impact', sans-serif; font-weight: 900;
+      color: rgba(0, 0, 0, 0.08); white-space: nowrap; pointer-events: none;
+      z-index: 0; user-select: none; letter-spacing: 5px;
+    }
+    @media (min-width: 600px) { .watermark { font-size: 150px; } .card { padding: 40px; } input { width: 300px; } }
+
+    .card-header, .card-body, .card-footer { position: relative; z-index: 2; }
+    .card-header { text-align: center; border-bottom: 2px solid #eee; padding-bottom: 15px; margin-bottom: 15px; }
+    
+    .student-name-box { display: flex; align-items: center; justify-content: center; gap: 5px; }
+    .student-name {
+      font-size: 22px; color: #1a237e; font-weight: 800; text-transform: uppercase;
+      margin: 0; font-family: 'Times New Roman', serif; line-height: 1.2;
+    }
+    @media (min-width: 600px) { .student-name { font-size: 32px; } }
+
+    .verify-badge { width: 20px; height: 20px; vertical-align: middle; display: inline-block; }
+    .top-status { font-size: 16px; font-weight: bold; margin-top: 5px; padding: 2px 10px; border-radius: 4px; display: inline-block; }
+    .bg-pass { background: #e8f5e9; color: #2e7d32; border: 1px solid #c8e6c9; }
+    .bg-fail { background: #ffebee; color: #c62828; border: 1px solid #ffcdd2; }
+    .dev-title { font-size: 12px; color: #ff6f00; font-weight: bold; text-transform: uppercase; margin-top: 5px; display: block; }
+
+    .info-grid {
+      display: grid; grid-template-columns: 1fr; gap: 8px; margin-bottom: 15px;
+      background: #f8f9fa; padding: 10px; border-radius: 8px; border: 1px solid #e0e0e0;
+    }
+    @media (min-width: 600px) { .info-grid { grid-template-columns: 1fr 1fr; } }
+    .info-item { font-size: 14px; color: #333; display: flex; justify-content: space-between; }
+    .info-item strong { color: #1a237e; text-transform: uppercase; margin-right: 10px; }
+
+    .subject-grid { display: grid; grid-template-columns: 2fr 1fr; border: 1px solid #ccc; font-size: 14px; }
+    .subject-row { display: contents; }
+    .subject-cell { padding: 8px 10px; border-bottom: 1px solid #eee; }
+    .subject-header { background: #1a237e; color: white; font-weight: bold; }
+    .grade-cell { text-align: center; font-weight: bold; border-left: 1px solid #eee; }
+
+    .result-status-bottom {
+      text-align: center; font-size: 24px; margin-top: 20px; padding: 10px;
+      background: #f1f1f1; border-radius: 8px; text-transform: uppercase; letter-spacing: 1px;
+    }
+    .text-pass { color: #2e7d32; font-weight: 900; font-size: 28px; }
+    .text-fail { color: #d32f2f; font-weight: 900; font-size: 28px; }
+
+    .action-buttons { display: flex; flex-direction: column; gap: 10px; margin-top: 20px; align-items: center; }
+    .btn-common {
+      padding: 12px 25px; border-radius: 50px; font-weight: bold; display: flex; align-items: center;
+      gap: 8px; text-decoration: none; width: 80%; justify-content: center; color: white;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.2); cursor: pointer; border: none; font-size: 14px;
+    }
+    .whatsapp-btn { background: #25D366; }
+    .download-btn { background: #1a237e; }
+    .notfound { color: #d32f2f; background: #ffcdd2; padding: 15px; border-radius: 8px; width: 90%; margin-top: 20px; }
+  </style>
+</head>
+<body>
+
+  <!-- LOADING SCREEN OVERLAY -->
+  <div id="loadingScreen">
+    <div class="spinner"></div>
+    <div class="countdown" id="timer">5</div>
+    <div class="loading-text">Please wait, loading data...</div>
+    <div class="sambalpuri-text">ଟିକେ ଅଟକ ଲୋଡ଼ିଂ ହେଉଛେ</div>
+    
+    <a href="https://www.instagram.com/snr__27?igsh=MXI4YXd5NnIxMDAzcw==" target="_blank" class="follow-btn">
+      <img src="https://upload.wikimedia.org/wikipedia/commons/a/a5/Instagram_icon.png" width="20" alt="Insta">
+      Follow Developer SNR
+    </a>
+  </div>
+
+  <header onclick="window.open('https://www.instagram.com/snr__27?igsh=MXI4YXd5NnIxMDAzcw==', '_blank')">
+    Developer SNR - Portal
+    <a href="https://postimages.org/" target="_blank"><img src="https://i.postimg.cc/1zk15P0B/badge-18371637-1.png" border="0" alt="badge-18371637-1"/></a>
+  </header>
+
+  <div class="container">
+    
+    <div class="tabs">
+      <button class="tab-btn active" id="btn1" onclick="switchSemester(1)">1st Sem</button>
+      <button class="tab-btn" id="btn2" onclick="switchSemester(2)">2nd Sem</button>
+    </div>
+
+    <h2 id="semTitle" style="color: #1a237e; margin-top:0; font-size: 18px;">Check Result</h2>
+
+    <div class="search-area">
+      <input type="text" id="searchBox" placeholder="Roll No / Name">
+      <button class="search-btn" onclick="searchResult()">Go</button>
+    </div>
+    
+    <div id="result"></div>
+    
+    <div style="margin-top: 30px; color: #666; font-size: 12px; padding: 10px;">
+      <p>Sambalpur University (+3 1st & 2nd Sem)</p>
+      <p>Developed by <b>SNR</b></p>
+    </div>
+  </div>
+
+  <script>
+    let currentSemester = 1;
+    let studentsSem1 = [];
+    let studentsSem2 = [];
+    let isDataLoaded = false;
+    let timerValue = 5;
+
+    // --- LOADING SCREEN LOGIC ---
+    function startLoadingTimer() {
+        const timerElement = document.getElementById('timer');
+        const interval = setInterval(() => {
+            timerValue--;
+            timerElement.innerText = timerValue;
+            
+            if (timerValue <= 0) {
+                clearInterval(interval);
+                checkAndHideLoader();
+            }
+        }, 1000);
+    }
+
+    function checkAndHideLoader() {
+        // Hide loader ONLY if timer is 0 AND data is loaded
+        if (timerValue <= 0 && isDataLoaded) {
+            const screen = document.getElementById('loadingScreen');
+            screen.style.opacity = '0';
+            setTimeout(() => {
+                screen.style.display = 'none';
+            }, 500);
+        } else if (timerValue <= 0 && !isDataLoaded) {
+            document.querySelector('.loading-text').innerText = "Finalizing data...";
+        }
+    }
+
+    startLoadingTimer();
+
+    // --- DATA LOADING (Promises) ---
+    // Use Promise.all to track both files
+    Promise.all([
+        fetch("EGTR_+3_1SEM_NEP_DEC_2024.xlsx").then(res => res.ok ? res.arrayBuffer() : Promise.reject("1st Sem Error")),
+        fetch("EGTR_2ND_SEM_NEP.xlsx").then(res => res.ok ? res.arrayBuffer() : Promise.reject("2nd Sem Error"))
+    ]).then(buffers => {
+        // Parse 1st Sem
+        const wb1 = XLSX.read(buffers[0], { type: 'array' });
+        studentsSem1 = parseExcelData(XLSX.utils.sheet_to_json(wb1.Sheets[wb1.SheetNames[0]]), 1);
+        
+        // Parse 2nd Sem
+        const wb2 = XLSX.read(buffers[1], { type: 'array' });
+        studentsSem2 = parseExcelData(XLSX.utils.sheet_to_json(wb2.Sheets[wb2.SheetNames[0]]), 2);
+        
+        isDataLoaded = true;
+        checkAndHideLoader(); // Check if we can hide screen
+    }).catch(err => {
+        console.error("Data Load Error:", err);
+        isDataLoaded = true; // Let user enter even if error, but show msg
+        document.querySelector('.loading-text').innerText = "Load Complete (Check Files)";
+        checkAndHideLoader();
+    });
+
+    function parseExcelData(jsonData, sem) {
+      return jsonData.map(row => {
+        const getKey = (key) => Object.keys(row).find(k => k.toLowerCase().includes(key.toLowerCase()));
+        
+        let name = row[getKey('Name')] || "Unknown";
+        let roll = row[getKey('Roll')] || "N/A";
+        let college = row[getKey('College')] || "SNR College";
+        let result = row[getKey('Result')] || "-";
+        let sgpa = row[getKey('SGPA')] || row[getKey('Point')] || row[getKey('Percentage')] || "-";
+        
+        let subjects = {};
+        Object.keys(row).forEach(key => {
+            let lowerKey = key.toLowerCase();
+            if(!['name', 'roll', 'college', 'result', 'sgpa', 'point', 'serial', 'sl', 'percentage', 'cgpa'].some(x => lowerKey.includes(x))) {
+                subjects[key] = [row[key]];
+            }
+        });
+        return { roll: String(roll), name: String(name), result, percentage: sgpa, college, subjects, sem };
+      });
+    }
+
+    // --- UI LOGIC ---
+    function switchSemester(sem) {
+      currentSemester = sem;
+      document.getElementById("btn1").classList.toggle("active", sem === 1);
+      document.getElementById("btn2").classList.toggle("active", sem === 2);
+      document.getElementById("semTitle").innerText = `Search ${sem === 1 ? '1st' : '2nd'} Semester`;
+      document.getElementById("result").innerHTML = "";
+    }
+
+    function searchResult() {
+      const query = document.getElementById("searchBox").value.trim().toLowerCase();
+      if (!query) return;
+
+      let resultDiv = document.getElementById("result");
+      resultDiv.innerHTML = "<p>Searching...</p>";
+
+      let targetArray = currentSemester === 1 ? studentsSem1 : studentsSem2;
+      let student = targetArray.find(s => 
+        String(s.roll).toLowerCase() === query || String(s.name).toLowerCase().includes(query)
+      );
+      
+      if (!student && (query === "snr" || query === "shankar meher")) {
+         student = {
+            roll: "DEV-SNR", name: "Shankar Meher", result: "Pass", percentage: "10.00",
+            college: "SNR Tech Institute", subjects: { "WEB": ["O"], "JAVA": ["O"], "AI": ["O"] }, sem: currentSemester
+         };
+      }
+      displayCard(student);
+    }
+
+    function displayCard(student) {
+      let resultDiv = document.getElementById("result");
+      resultDiv.innerHTML = "";
+
+      if (student) {
+        let isPass = String(student.result).toLowerCase().includes("pass");
+        let resultClassText = isPass ? "text-pass" : "text-fail";
+        let topStatusClass = isPass ? "bg-pass" : "bg-fail";
+        let shareText = `Check Result: ${window.location.href}`;
+        let whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(shareText)}`;
+
+        let finalName = student.name;
+        let devTagHTML = "";
+        if (finalName.toLowerCase().includes("shankar meher")) {
+            devTagHTML = `<div class="dev-title">Lead Developer & Creator (SNR)</div>`;
+        }
+
+        let subjectHTML = "";
+        for (let [subject, grades] of Object.entries(student.subjects)) {
+          if(grades[0] !== undefined) {
+             subjectHTML += `
+               <div class="subject-row">
+                 <div class="subject-cell">${subject}</div>
+                 <div class="subject-cell grade-cell">${grades.join(", ")}</div>
+               </div>`;
+          }
+        }
+
+        resultDiv.innerHTML = `
+          <div class="card" id="printArea">
+            <div class="watermark">SNR</div>
+            <div class="card-header">
+              <div class="top-status ${topStatusClass}">${student.result}</div>
+              <div class="student-name-box" style="margin-top:10px;">
+                <h1 class="student-name">${finalName}</h1>
+                <a href="#"><img src="https://i.postimg.cc/1zk15P0B/badge-18371637-1.png" class="verify-badge" alt="Verified"/></a>
+              </div>
+              ${devTagHTML}
+            </div>
+            <div class="card-body">
+              <div class="info-grid">
+                 <div class="info-item"><strong>Roll</strong> <span>${student.roll}</span></div>
+                 <div class="info-item"><strong>Exam</strong> <span>${currentSemester === 1 ? '1st' : '2nd'} Sem</span></div>
+                 <div class="info-item"><strong>Points</strong> <span>${student.percentage}</span></div>
+                 <div class="info-item" style="flex-direction:column; gap:2px;"><strong>College</strong> <span>${student.college}</span></div>
+              </div>
+              <div class="subject-grid">
+                <div class="subject-row">
+                  <div class="subject-cell subject-header">Subject</div>
+                  <div class="subject-cell subject-header grade-cell">Gr</div>
+                </div>
+                ${subjectHTML}
+              </div>
+              <div class="result-status-bottom">
+                Result: <span class="${resultClassText}">${student.result}</span>
+              </div>
+            </div>
+          </div>
+          <div class="action-buttons">
+               <button onclick="downloadResult()" class="btn-common download-btn">Download Result Image</button>
+               <a href="${whatsappUrl}" target="_blank" class="btn-common whatsapp-btn">
+                 <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" width="20" alt="WA"> Share Link
+               </a>
+            </div>
+        `;
+      } else {
+        resultDiv.innerHTML = `<div class="notfound">❌ Result not found. Check details.</div>`;
+      }
+    }
+
+    function downloadResult() {
+      const card = document.getElementById("printArea");
+      const btn = document.querySelector(".download-btn");
+      btn.innerText = "Downloading...";
+      html2canvas(card, { useCORS: true, scale: 2 }).then(canvas => {
+        const link = document.createElement('a');
+        link.download = `Result_${new Date().getTime()}.png`;
+        link.href = canvas.toDataURL("image/png");
+        link.click();
+        btn.innerText = "Download Result Image";
+      }).catch(err => {
+        alert("Error downloading image.");
+        btn.innerText = "Download Result Image";
+        console.error(err);
+      });
+    }
+  </script>
+</body>
+</html>
